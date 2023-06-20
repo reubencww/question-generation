@@ -1,3 +1,9 @@
+## About
+Web application for teachers to upload pictures, generate questions and answers using AI libraries. These are used for oral practices between teachers and students.
+
+## Stack
+Golang, Embedded VueJs, RabbitMQ for AI job processing, AI worker containers, postgresql
+
 ## Deployment/Running
 
 > **Warning**
