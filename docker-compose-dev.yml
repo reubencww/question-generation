@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  queue:
+    image: 'rabbitmq:3-management-alpine'
+    container_name: queue-prod
+    restart: unless-stopped
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - stinx
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "check_port_connectivity" ]
+      retries: 5
+      timeout: 5s
+
+  pgsql:
+    image: 'postgres:15-alpine'
+    container_name: postgres
+    ports:
+      - '5432:5432'
+    environment:
+      PGPASSWORD: 'secret'
+      POSTGRES_DB: 'hijiri'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'secret'
+    volumes:
+      - 'pg-data:/var/lib/postgresql/data'
+    networks:
+      - stinx
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "hijiri", "-U", "postgres" ]
+      retries: 3
+      timeout: 5s
+
+  minio:
+    image: 'bitnami/minio:latest'
+    container_name: minio
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      MINIO_ROOT_USER: 'minioadmin'
+      MINIO_ROOT_PASSWORD: 'minioadmin'
+      MINIO_DEFAULT_BUCKETS: hayate
+    volumes:
+      - 'minio-data:/data'
+    networks:
+      - stinx
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      retries: 3
+      timeout: 5s
+
+networks:
+  stinx:
+    driver: bridge
+
+volumes:
+  pg-data:
+  redis-data:
+  minio-data:
+  rabbitmq-data:

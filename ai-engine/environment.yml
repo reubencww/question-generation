@@ -1,0 +1,25 @@
+name: donny
+channels:
+  - pytorch
+  - conda-forge
+  - nvidia
+dependencies:
+  - python=3.9
+  - pytorch::pytorch=1.13.0
+  - pytorch::torchvision
+  - transformers=4.15.0
+  - timm
+  - grpcio=1.49.1
+  - pip
+  - pip:
+    # conda-forge only has linux and macos (macos has no GPU support either)
+    - fairscale
+    - sentencepiece
+    - aio-pika==8.2.4
+    - python-dotenv
+    - grpcio-tools==1.49.1
+    - structlog
+    - minio
+    - nltk
+    - black
+    - isort

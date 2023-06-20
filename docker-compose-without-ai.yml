@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  control-plane:
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    build:
+      context: ./control-plane
+      dockerfile: Dockerfile
+    image: control-plane
+    container_name: control-plane-prod
+    restart: unless-stopped
+    environment:
+      DB_HOSTNAME: pgsql
+      DB_USERNAME: postgres
+      DB_PASSWORD: secret
+      DB_DATABASE: controlplane
+      DB_PORT: 5432
+      STORAGE_ENDPOINT: minio:9000
+      STORAGE_ACCESS_KEY: minioadmin
+      STORAGE_SECRET_KEY: minioadmin
+      STORAGE_BUCKET: hayate
+      STORAGE_USE_SSL: "false"
+      QUEUE_URL: "amqp://guest:guest@queue:5672/"
+    networks:
+      - stinx
+    depends_on:
+      - queue
+
+  queue:
+    image: 'rabbitmq:3-management-alpine'
+    container_name: queue-prod
+    restart: unless-stopped
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - stinx
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "check_port_connectivity" ]
+      retries: 3
+      timeout: 30s
+
+  pgsql:
+    image: 'postgres:15-alpine'
+    container_name: postgres
+    ports:
+      - '${FORWARD_DB_PORT:-5432}:5432'
+    environment:
+      PGPASSWORD: secret
+      POSTGRES_DB: controlplane
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - 'pg-data:/var/lib/postgresql/data'
+    networks:
+      - stinx
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "controlplane", "-U", "postgres" ]
+      retries: 3
+      timeout: 10s
+
+  minio:
+    image: 'bitnami/minio:latest'
+    container_name: minio
+    ports:
+      - '${FORWARD_MINIO_PORT:-9000}:9000'
+      - '${FORWARD_MINIO_CONSOLE_PORT:-9001}:9001'
+    environment:
+      MINIO_ROOT_USER: 'minioadmin'
+      MINIO_ROOT_PASSWORD: 'minioadmin'
+      MINIO_DEFAULT_BUCKETS: 'hayate:public'
+    volumes:
+      - 'minio-data:/data'
+    networks:
+      - stinx
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      retries: 3
+      timeout: 30s
+
+networks:
+  stinx:
+    driver: bridge
+
+volumes:
+  pg-data:
+  redis-data:
+  minio-data:
+  rabbitmq-data:

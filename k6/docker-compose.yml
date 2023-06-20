@@ -1,0 +1,52 @@
+version: '3.8'
+
+networks:
+  k6:
+  grafana:
+  timescaledb:
+  stinx:
+    name: donny-don-don-don_stinx
+    external: true
+
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg12
+    container_name: timescaledb
+    command: postgres -c shared_preload_libraries=timescaledb
+    networks:
+      - k6
+      - grafana
+      - timescaledb
+    expose:
+      - 5432
+    environment:
+      - PGDATA=/var/lib/postgresql/data/timescaledb
+      - POSTGRES_DB=k6
+      - POSTGRES_USER=k6
+      - POSTGRES_PASSWORD=k6
+
+  grafana:
+    image: grafana/grafana:8.2.6
+    container_name: grafana
+    networks:
+      - grafana
+      - timescaledb
+    ports:
+      - "3333:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_BASIC_ENABLED=false
+    volumes:
+      - ./grafana:/etc/grafana/provisioning/
+
+  k6:
+    build: .
+    networks:
+      - k6
+      - stinx
+    ports:
+      - "6565:6565"
+    environment:
+      - K6_OUT=timescaledb=postgresql://k6:k6@timescaledb:5432/k6
+      - CONTROL_PLANE=control-plane-prod:8000

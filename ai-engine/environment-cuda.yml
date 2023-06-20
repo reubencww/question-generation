@@ -1,0 +1,29 @@
+name: donny
+channels:
+  - pytorch
+  - conda-forge
+  - nvidia
+dependencies:
+  - python=3.9
+  - pytorch::pytorch
+  - pytorch::torchvision
+  - pytorch-cuda
+  - transformers=4.15.0
+  - timm
+  - scikit-learn
+  - numpy
+  - jupyter
+  - jupyterlab
+  - ipywidgets
+  - ipykernel
+  - isort
+  - black
+  - black-jupyter
+  - omegaconf
+  - pip
+  - pip:
+    # conda-forge only has linux and macos (macos has no GPU support either)
+    - fairscale
+    - aio-pika=8.2.4
+    - grpcio=1.50.0
+    - grpcio-tools=1.50.0

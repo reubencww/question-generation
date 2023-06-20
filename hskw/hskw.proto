@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+option go_package = "senkawa.moe/haa-chan/hskw";
+
+message GenerateCaption {
+  int32 challenge_id = 1;
+  string image_path = 2;
+}
+
+message GenerateQuestionAnswer {
+  int32 challenge_id = 1;
+  string caption = 2;
+}
+
+service Snappy {
+  rpc CreatedCaption (CreatedCaptionRequest) returns (CreatedCaptionResponse) {}
+  rpc CreatedQuestion (CreatedQuestionRequest) returns (CreatedQuestionResponse) {}
+}
+
+message CreatedCaptionRequest {
+  int32 challenge_id = 1;
+  string caption = 2;
+}
+
+message CreatedCaptionResponse {}
+
+message QNA {
+  string question = 1;
+  string answer = 2;
+}
+
+message CreatedQuestionRequest {
+  int32 challenge_id = 1;
+  repeated QNA qnas = 2;
+}
+
+message CreatedQuestionResponse {}
+
